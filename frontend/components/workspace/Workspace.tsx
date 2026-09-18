@@ -114,7 +114,7 @@ export function Workspace() {
               step.id === agent
                 ? {
                     ...step,
-                    status: (event.status as AgentStatus) === "coded" || event.status === "architected" ? "complete" : mapStatus(String(event.status)),
+                    status: event.status === "coded" || event.status === "architected" ? "complete" : mapStatus(String(event.status)),
                     message: String(event.message || step.message),
                   }
                 : step.id === nextAgent(agent) && event.status !== "error"
