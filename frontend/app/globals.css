@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  background: #09090b;
+}
+
+body {
+  @apply text-zinc-200 antialiased;
+}
+
+* {
+  scrollbar-color: #27272a transparent;
+  scrollbar-width: thin;
+}
+
+::selection {
+  background: #27272a;
+  color: #fafafa;
+}
+
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .margin {
+  background-color: #09090b !important;
+}
