@@ -2,18 +2,17 @@
 
 import dynamic from "next/dynamic";
 import { Hexagon, Play, RotateCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { CodePane } from "@/components/workspace/CodePane";
 import { Metrics } from "@/components/workspace/Metrics";
 import { Pipeline } from "@/components/workspace/Pipeline";
 import { TerminalPane } from "@/components/workspace/TerminalPane";
-import { fetchSamples, generateTests, runTests, streamGenerate } from "@/lib/api";
+import { runTests, streamGenerate } from "@/lib/api";
 import { FALLBACK_SAMPLES } from "@/lib/samples";
-import type { AgentName, AgentStatus, GenerateResponse, PipelineStep, SampleSpec } from "@/lib/types";
+import type { AgentName, AgentStatus, GenerateResponse, PipelineStep } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SpecEditor = dynamic(() => import("./SpecEditor").then((mod) => mod.SpecEditor), {
@@ -29,7 +28,7 @@ const INITIAL_STEPS: PipelineStep[] = [
 ];
 
 export function Workspace() {
-  const [samples, setSamples] = useState<SampleSpec[]>(FALLBACK_SAMPLES);
+  const samples = FALLBACK_SAMPLES;
   const [sampleId, setSampleId] = useState(FALLBACK_SAMPLES[0].id);
   const [spec, setSpec] = useState(FALLBACK_SAMPLES[0].spec);
   const [steps, setSteps] = useState<PipelineStep[]>(INITIAL_STEPS);
@@ -47,18 +46,6 @@ export function Workspace() {
   const [durationMs, setDurationMs] = useState(0);
   const [caseCount, setCaseCount] = useState(0);
   const [splitV, setSplitV] = useState(58);
-
-  useEffect(() => {
-    fetchSamples()
-      .then((items) => {
-        if (items.length) {
-          setSamples(items);
-          setSampleId(items[0].id);
-          setSpec(items[0].spec);
-        }
-      })
-      .catch(() => undefined);
-  }, []);
 
   const suiteStatus = useMemo(() => {
     if (running) return "run";
@@ -141,14 +128,9 @@ export function Workspace() {
         }
       });
       if (streamed) applyResult(streamed);
-    } catch {
-      try {
-        const fallback = await generateTests(spec);
-        applyResult(fallback);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Generation failed");
-        setSteps((current) => current.map((step) => (step.status === "running" ? { ...step, status: "error" } : step)));
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed");
+      setSteps((current) => current.map((step) => (step.status === "running" ? { ...step, status: "error" } : step)));
     } finally {
       setRunning(false);
     }
@@ -178,11 +160,11 @@ export function Workspace() {
     setSpec(sample.spec);
   }
 
-  function onDrag(event: React.MouseEvent<HTMLDivElement>, axis: "h" | "v") {
+  function onDrag(event: MouseEvent<HTMLDivElement>, axis: "h" | "v") {
     event.preventDefault();
     const start = axis === "h" ? event.clientX : event.clientY;
     const origin = axis === "h" ? leftWidth : splitV;
-    function move(ev: MouseEvent) {
+    function move(ev: globalThis.MouseEvent) {
       if (axis === "h") {
         const delta = ((ev.clientX - start) / window.innerWidth) * 100;
         setLeftWidth(Math.min(62, Math.max(28, origin + delta)));
